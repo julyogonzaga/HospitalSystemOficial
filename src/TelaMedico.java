@@ -134,7 +134,6 @@ public class TelaMedico extends JFrame {
     private JPanel criarCartaoFormulario() {
         PainelCartao cartao = new PainelCartao(new GridBagLayout());
 
-        // Título + indicador de modo (novo / editando)
         JLabel titulo = new JLabel("Dados do Médico");
         titulo.setFont(fonte(Font.BOLD, 17));
         titulo.setForeground(COR_TEXTO);
@@ -251,7 +250,6 @@ public class TelaMedico extends JFrame {
         return cartao;
     }
 
-    /** Adiciona um rótulo (em cima) e um campo (embaixo) numa coluna do formulário. */
     private void adicionarCampo(JPanel painel, String rotulo, JTextField campo,
                                 int x, int y, int largura) {
         GridBagConstraints gbc = new GridBagConstraints();
@@ -283,14 +281,12 @@ public class TelaMedico extends JFrame {
         btnExcluir.addActionListener(e -> excluirMedico());
         btnLimpar.addActionListener(e -> limparFormulario());
 
-        // Busca em tempo real (funciona também ao colar texto)
         txtBusca.getDocument().addDocumentListener(new DocumentListener() {
             @Override public void insertUpdate(DocumentEvent e)  { filtrar(); }
             @Override public void removeUpdate(DocumentEvent e)  { filtrar(); }
             @Override public void changedUpdate(DocumentEvent e) { filtrar(); }
         });
 
-        // Seleção por mouse OU teclado (setas)
         tabelaMedicos.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 preencherCamposComLinhaSelecionada();
@@ -303,7 +299,6 @@ public class TelaMedico extends JFrame {
         if (termo.isEmpty()) {
             sorter.setRowFilter(null);
         } else {
-            // Pattern.quote evita erro quando o usuário digita ( [ * etc.
             sorter.setRowFilter(RowFilter.regexFilter("(?i)" + Pattern.quote(termo)));
         }
     }
@@ -386,7 +381,6 @@ public class TelaMedico extends JFrame {
         );
 
         if (confirmacao == JOptionPane.YES_OPTION) {
-            // Antes esta linha estava comentada: a tela dizia "excluído", mas nada era apagado.
             medicoDAO.deletarMedico(idMedicoSelecionado);
 
             limparFormulario();
@@ -474,7 +468,6 @@ public class TelaMedico extends JFrame {
         lblModo.setForeground(COR_VERDE);
     }
 
-    /** Mensagem discreta no rodapé da tabela; some sozinha depois de alguns segundos. */
     private void mostrarStatus(String mensagem, Color cor) {
         lblStatus.setForeground(cor);
         lblStatus.setText("●  " + mensagem);
@@ -533,7 +526,6 @@ public class TelaMedico extends JFrame {
     //  COMPONENTES VISUAIS PERSONALIZADOS
     // =====================================================================
 
-    /** Botão com cantos totalmente arredondados e efeito ao passar o mouse / clicar. */
     private static class BotaoArredondado extends JButton {
         private final Color corBase;
         private boolean sobre, pressionado;
@@ -593,7 +585,6 @@ public class TelaMedico extends JFrame {
         }
     }
 
-    /** Campo de texto com cantos arredondados, destaque ao focar e texto de dica (placeholder). */
     private static class CampoArredondado extends JTextField {
         private final String dica;
 
@@ -638,7 +629,6 @@ public class TelaMedico extends JFrame {
         }
     }
 
-    /** Painel branco com cantos arredondados e sombra suave. */
     private static class PainelCartao extends JPanel {
         private static final int SOMBRA = 6;
         private static final int RAIO = 22;
@@ -657,18 +647,29 @@ public class TelaMedico extends JFrame {
             for (int i = SOMBRA; i >= 1; i--) {
                 int recuo = SOMBRA - i;
                 g2.setColor(new Color(15, 23, 42, (recuo + 1) * 2));
-                g2.fillRoundRect(recuo, recuo + 2,
-                        getWidth() - 2 * recuo, getHeight() - 2 * recuo - 2,
-                        RAIO + (SOMBRA - recuo) * 2, RAIO + (SOMBRA - recuo) * 2);
+                g2.fillRoundRect(
+                        recuo,
+                        recuo + 2,
+                        getWidth() - 2 * recuo,
+                        getHeight() - 2 * recuo - 2,
+                        RAIO + (SOMBRA - recuo) * 2,
+                        RAIO + (SOMBRA - recuo) * 2
+                );
             }
 
             g2.setColor(Color.WHITE);
-            g2.fillRoundRect(SOMBRA, SOMBRA, getWidth() - 2 * SOMBRA, getHeight() - 2 * SOMBRA - 2, RAIO, RAIO);
+            g2.fillRoundRect(
+                    SOMBRA,
+                    SOMBRA,
+                    getWidth() - 2 * SOMBRA,
+                    getHeight() - 2 * SOMBRA - 2,
+                    RAIO,
+                    RAIO
+            );
             g2.dispose();
         }
     }
 
-    /** Ícone de cruz (hospital) desenhado em código, sem precisar de imagem. */
     private static class IconeCruz extends JComponent {
         private final int tam;
 
@@ -693,7 +694,6 @@ public class TelaMedico extends JFrame {
         }
     }
 
-    /** Células com linhas zebradas, seleção suave e espaçamento interno. */
     private static class RenderizadorCelula extends DefaultTableCellRenderer {
         @Override
         public Component getTableCellRendererComponent(JTable tabela, Object valor,
@@ -712,7 +712,6 @@ public class TelaMedico extends JFrame {
         }
     }
 
-    /** Cabeçalho da tabela com fundo claro, texto em negrito e seta de ordenação. */
     private static class RenderizadorCabecalho extends DefaultTableCellRenderer {
         @Override
         public Component getTableCellRendererComponent(JTable tabela, Object valor,
@@ -735,5 +734,12 @@ public class TelaMedico extends JFrame {
             setHorizontalAlignment(coluna == 0 || coluna == 5 ? SwingConstants.CENTER : SwingConstants.LEFT);
             return this;
         }
+    }
+
+    // Método main para inicialização direta da tela
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            new TelaMedico().setVisible(true);
+        });
     }
 }
