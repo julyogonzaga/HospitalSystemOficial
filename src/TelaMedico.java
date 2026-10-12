@@ -20,51 +20,63 @@ public class TelaMedico extends JFrame {
     private JButton btnSalvar, btnEditar, btnExcluir, btnLimpar;
     private int idMedicoSelecionado = -1;
 
+    // Cores do Tema Moderno (Flat Design)
+    private final Color COR_BG_GERAL = new Color(248, 249, 250);
+    private final Color COR_CARD = Color.WHITE;
+    private final Color COR_BORDA = new Color(226, 232, 240);
+    private final Color COR_TEXTO = new Color(30, 41, 59);
+
+    // Cores de Ação
+    private final Color COR_PRIMARIA = new Color(13, 110, 253);   // Azul moderno
+    private final Color COR_SUCESSO = new Color(25, 135, 84);     // Verde elegante
+    private final Color COR_PERIGO = new Color(220, 53, 69);      // Vermelho suave
+    private final Color COR_SECUNDARIA = new Color(108, 117, 125); // Cinza neutro
+
     public TelaMedico() {
         medicoDAO = new MedicoDAO();
 
         setTitle("Sistema Hospitalar — Gestão de Médicos");
-        setSize(950, 680);
+        setSize(980, 720);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // Painel Principal com Espaçamento (Padding)
-        JPanel contentPane = new JPanel(new BorderLayout(15, 15));
-        contentPane.setBorder(new EmptyBorder(15, 15, 15, 15));
-        contentPane.setBackground(new Color(245, 247, 250));
+        // Painel Principal com Padding confortável
+        JPanel contentPane = new JPanel(new BorderLayout(16, 16));
+        contentPane.setBorder(new EmptyBorder(20, 20, 20, 20));
+        contentPane.setBackground(COR_BG_GERAL);
         setContentPane(contentPane);
 
-        // --- PAINEL NORTE: FORMULÁRIO ---
+        // --- PAINEL NORTE: FORMULÁRIO ESTILIZADO EM CARD ---
         JPanel panelForm = new JPanel(new GridBagLayout());
-        panelForm.setBackground(Color.WHITE);
+        panelForm.setBackground(COR_CARD);
         panelForm.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(220, 224, 230), 1),
-                new EmptyBorder(15, 15, 15, 15)
+                BorderFactory.createLineBorder(COR_BORDA, 1),
+                new EmptyBorder(20, 20, 20, 20)
         ));
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(6, 6, 6, 6);
+        gbc.insets = new Insets(8, 8, 8, 8);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
         // Linha 0: Nome e CPF
-        adicionarRotuloECampo(panelForm, "Nome Completo:", txtNome = new JTextField(), gbc, 0, 0, 1);
-        adicionarRotuloECampo(panelForm, "CPF:", txtCpf = new JTextField(), gbc, 2, 0, 1);
+        adicionarRotuloECampo(panelForm, "Nome Completo:", txtNome = criarCampoTexto(), gbc, 0, 0, 1);
+        adicionarRotuloECampo(panelForm, "CPF:", txtCpf = criarCampoTexto(), gbc, 2, 0, 1);
 
-        // Linha 1: CRM, Telefone e ID Especialidade
-        adicionarRotuloECampo(panelForm, "CRM:", txtCrm = new JTextField(), gbc, 0, 1, 1);
-        adicionarRotuloECampo(panelForm, "Telefone:", txtTelefone = new JTextField(), gbc, 2, 1, 1);
+        // Linha 1: CRM, Telefone
+        adicionarRotuloECampo(panelForm, "CRM:", txtCrm = criarCampoTexto(), gbc, 0, 1, 1);
+        adicionarRotuloECampo(panelForm, "Telefone:", txtTelefone = criarCampoTexto(), gbc, 2, 1, 1);
 
-        // Linha 2: ID Especialidade isolado ou alinhado
-        adicionarRotuloECampo(panelForm, "ID Especialidade:", txtEspecialidadeId = new JTextField(), gbc, 0, 2, 1);
+        // Linha 2: ID Especialidade
+        adicionarRotuloECampo(panelForm, "ID Especialidade:", txtEspecialidadeId = criarCampoTexto(), gbc, 0, 2, 1);
 
-        // Linha 3: Barra de Ações (Botões)
-        JPanel panelBotoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        // Linha 3: Barra de Ações (Botões Modernos)
+        JPanel panelBotoes = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 0));
         panelBotoes.setOpaque(false);
 
-        btnSalvar = criarBotaoEstilizado("Cadastrar Novo", new Color(40, 167, 69), Color.WHITE);
-        btnEditar = criarBotaoEstilizado("Salvar Alterações", new Color(0, 123, 255), Color.WHITE);
-        btnExcluir = criarBotaoEstilizado("Excluir", new Color(220, 53, 69), Color.WHITE);
-        btnLimpar = criarBotaoEstilizado("Limpar Seleção", new Color(108, 117, 125), Color.WHITE);
+        btnSalvar = criarBotaoEstilizado("Cadastrar Novo", COR_SUCESSO);
+        btnEditar = criarBotaoEstilizado("Salvar Alterações", COR_PRIMARIA);
+        btnExcluir = criarBotaoEstilizado("Excluir", COR_PERIGO);
+        btnLimpar = criarBotaoEstilizado("Limpar Seleção", COR_SECUNDARIA);
 
         btnEditar.setEnabled(false);
         btnExcluir.setEnabled(false);
@@ -77,24 +89,35 @@ public class TelaMedico extends JFrame {
         gbc.gridx = 0;
         gbc.gridy = 3;
         gbc.gridwidth = 4;
-        gbc.insets = new Insets(15, 6, 6, 6);
+        gbc.insets = new Insets(20, 8, 8, 8);
         panelForm.add(panelBotoes, gbc);
 
         add(panelForm, BorderLayout.NORTH);
 
         // --- PAINEL CENTRO: TABELA E FILTRO DE BUSCA ---
-        JPanel panelCentro = new JPanel(new BorderLayout(10, 10));
+        JPanel panelCentro = new JPanel(new BorderLayout(12, 12));
         panelCentro.setOpaque(false);
 
-        // Campo de Busca
-        JPanel panelBusca = new JPanel(new BorderLayout(8, 0));
-        panelBusca.setOpaque(false);
-        panelBusca.add(new JLabel("🔍 Buscar por Médico/CPF/CRM:"), BorderLayout.WEST);
-        txtBusca = new JTextField();
+        // Campo de Busca Moderno
+        JPanel panelBusca = new JPanel(new BorderLayout(10, 0));
+        panelBusca.setBackground(COR_CARD);
+        panelBusca.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(COR_BORDA, 1),
+                new EmptyBorder(10, 12, 10, 12)
+        ));
+
+        JLabel lblBusca = new JLabel("🔍 Filtrar Registros:");
+        lblBusca.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lblBusca.setForeground(COR_TEXTO);
+        panelBusca.add(lblBusca, BorderLayout.WEST);
+
+        txtBusca = criarCampoTexto();
+        txtBusca.setPreferredSize(new Dimension(250, 32));
         panelBusca.add(txtBusca, BorderLayout.CENTER);
+
         panelCentro.add(panelBusca, BorderLayout.NORTH);
 
-        // Tabela Estilizada
+        // Tabela Estilizada (Fontes limpas, linhas alternadas e altura maior)
         tableModel = new DefaultTableModel(new String[]{"ID", "Nome", "CPF", "CRM", "Telefone", "Especialidade ID"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -103,17 +126,25 @@ public class TelaMedico extends JFrame {
         };
 
         tabelaMedicos = new JTable(tableModel);
-        tabelaMedicos.setRowHeight(28);
+        tabelaMedicos.setRowHeight(32);
+        tabelaMedicos.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         tabelaMedicos.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        tabelaMedicos.getTableHeader().setFont(new Font("SansSerif", Font.BOLD, 12));
-        tabelaMedicos.getTableHeader().setBackground(new Color(230, 235, 242));
+        tabelaMedicos.setSelectionBackground(new Color(224, 242, 254));
+        tabelaMedicos.setSelectionForeground(new Color(12, 74, 110));
+        tabelaMedicos.setGridColor(COR_BORDA);
+
+        // Estilo do Cabeçalho da Tabela
+        tabelaMedicos.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 12));
+        tabelaMedicos.getTableHeader().setBackground(new Color(241, 245, 249));
+        tabelaMedicos.getTableHeader().setForeground(new Color(71, 85, 105));
+        tabelaMedicos.getTableHeader().setPreferredSize(new Dimension(0, 36));
 
         sorter = new TableRowSorter<>(tableModel);
         tabelaMedicos.setRowSorter(sorter);
 
         JScrollPane scrollPane = new JScrollPane(tabelaMedicos);
         scrollPane.getViewport().setBackground(Color.WHITE);
-        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(220, 224, 230)));
+        scrollPane.setBorder(BorderFactory.createLineBorder(COR_BORDA, 1));
 
         panelCentro.add(scrollPane, BorderLayout.CENTER);
         add(panelCentro, BorderLayout.CENTER);
@@ -146,33 +177,55 @@ public class TelaMedico extends JFrame {
         atualizarTabela();
     }
 
+    private JTextField criarCampoTexto() {
+        JTextField campo = new JTextField();
+        campo.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        campo.setPreferredSize(new Dimension(180, 34));
+        campo.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(COR_BORDA, 1),
+                new EmptyBorder(4, 8, 4, 8)
+        ));
+        return campo;
+    }
+
     private void adicionarRotuloECampo(JPanel panel, String label, JTextField campo, GridBagConstraints gbc, int x, int y, int width) {
         gbc.gridwidth = 1;
         gbc.weightx = 0;
         gbc.gridx = x;
         gbc.gridy = y;
+
         JLabel lbl = new JLabel(label);
-        lbl.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        lbl.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        lbl.setForeground(COR_TEXTO);
         panel.add(lbl, gbc);
 
         gbc.gridx = x + 1;
         gbc.weightx = 1.0;
         gbc.gridwidth = width;
-        campo.setPreferredSize(new Dimension(150, 26));
         panel.add(campo, gbc);
     }
 
-    private JButton criarBotaoEstilizado(String texto, Color bg, Color fg) {
+    private JButton criarBotaoEstilizado(String texto, Color bg) {
         JButton btn = new JButton(texto);
-        btn.setFont(new Font("SansSerif", Font.BOLD, 12));
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 12));
         btn.setBackground(bg);
-        btn.setForeground(fg);
+        btn.setForeground(Color.WHITE);
         btn.setFocusPainted(false);
         btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        btn.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(bg.darker(), 1),
-                new EmptyBorder(6, 12, 6, 12)
-        ));
+        btn.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
+
+        // Efeito visual sutil ao passar o mouse
+        btn.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                if (btn.isEnabled()) btn.setBackground(bg.darker());
+            }
+            @Override
+            public void mouseExited(MouseEvent e) {
+                if (btn.isEnabled()) btn.setBackground(bg);
+            }
+        });
+
         return btn;
     }
 
@@ -245,7 +298,6 @@ public class TelaMedico extends JFrame {
 
         if (confirmacao == JOptionPane.YES_OPTION) {
             try {
-                // Caso o seu DAO possua o método de excluir:
                 // medicoDAO.excluirMedico(idMedicoSelecionado);
                 JOptionPane.showMessageDialog(this, "Registro excluído com sucesso!", "Sucesso", JOptionPane.INFORMATION_MESSAGE);
                 limparFormulario();
