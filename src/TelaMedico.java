@@ -15,7 +15,7 @@ import java.awt.event.MouseEvent;
 import java.util.List;
 import java.util.regex.Pattern;
 
-/**
+/*
  * Tela de gestão de médicos.
  * Visual feito 100% com Swing puro (sem bibliotecas extras): botões e campos
  * arredondados, cartões com sombra, tabela com linhas zebradas e cabeçalho.
@@ -522,9 +522,9 @@ public class TelaMedico extends JFrame {
         });
     }
 
-    // =====================================================================
+    // ====================================================================
     //  COMPONENTES VISUAIS PERSONALIZADOS
-    // =====================================================================
+    // ====================================================================
 
     private static class BotaoArredondado extends JButton {
         private final Color corBase;
@@ -736,7 +736,7 @@ public class TelaMedico extends JFrame {
         }
     }
 
-    // Método main para inicialização direta da tela
+    // Metodo main para inicialização direta da tela
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             new TelaMedico().setVisible(true);

@@ -5,7 +5,7 @@ import java.sql.SQLException;
 
 public class EspecialidadeDAO {
 
-    // Método para CADASTRAR uma nova especialidade
+    // Metodo para CADASTRAR uma nova especialidade
     public void cadastrarEspecialidade(String nomeEspecialidade) {
         String sql = "INSERT INTO especialidades (nome_especialidade) VALUES (?)";
 
@@ -21,7 +21,7 @@ public class EspecialidadeDAO {
         }
     }
 
-    // Método para LISTAR todas as especialidades salvas no banco
+    // Metodo para LISTAR todas as especialidades salvas no banco
     public void listarEspecialidades() {
         String sql = "SELECT id_especialidade, nome_especialidade FROM especialidades";
 
