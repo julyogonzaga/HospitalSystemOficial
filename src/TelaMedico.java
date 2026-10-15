@@ -15,10 +15,8 @@ import java.awt.event.MouseEvent;
 import java.util.List;
 import java.util.regex.Pattern;
 
-/*
- * Tela de gestão de médicos.
- * Visual feito 100% com Swing puro (sem bibliotecas extras): botões e campos
- * arredondados, cartões com sombra, tabela com linhas zebradas e cabeçalho.
+/**
+ * Tela de gestão de médicos com Seletor de Especialidades Arredondado (Corrigido internamente).
  */
 public class TelaMedico extends JFrame {
 
@@ -35,7 +33,8 @@ public class TelaMedico extends JFrame {
     private static final Color COR_CINZA           = new Color(100, 116, 139);
 
     // ---------- Componentes ----------
-    private JTextField txtNome, txtCpf, txtCrm, txtTelefone, txtEspecialidadeId, txtBusca;
+    private JTextField txtNome, txtCpf, txtCrm, txtTelefone, txtBusca;
+    private ComboArredondado<ItemEspecialidade> cbEspecialidade;
     private JTable tabelaMedicos;
     private DefaultTableModel tableModel;
     private TableRowSorter<DefaultTableModel> sorter;
@@ -44,10 +43,12 @@ public class TelaMedico extends JFrame {
     private Timer timerStatus;
 
     private final MedicoDAO medicoDAO;
+    private final EspecialidadeDAO especialidadeDAO;
     private int idMedicoSelecionado = -1;
 
     public TelaMedico() {
         medicoDAO = new MedicoDAO();
+        especialidadeDAO = new EspecialidadeDAO();
 
         setTitle("Sistema Hospitalar — Gestão de Médicos");
         setSize(1050, 740);
@@ -69,7 +70,30 @@ public class TelaMedico extends JFrame {
         raiz.add(corpo, BorderLayout.CENTER);
 
         configurarEventos();
+        carregarEspecialidadesNoCombo();
         atualizarTabela();
+    }
+
+    // =====================================================================
+    //  CLASSE AUXILIAR PARA O COMBOBOX
+    // =====================================================================
+    public static class ItemEspecialidade {
+        private final int id;
+        private final String nome;
+
+        public ItemEspecialidade(int id, String nome) {
+            this.id = id;
+            this.nome = nome;
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        @Override
+        public String toString() {
+            return nome;
+        }
     }
 
     // =====================================================================
@@ -156,18 +180,21 @@ public class TelaMedico extends JFrame {
         gbc.insets = new Insets(0, 8, 4, 8);
         cartao.add(linhaTitulo, gbc);
 
-        txtNome            = new CampoArredondado("Ex.: Dra. Maria Souza");
-        txtCpf             = new CampoArredondado("000.000.000-00");
-        txtCrm             = new CampoArredondado("Ex.: 123456-PE");
-        txtTelefone        = new CampoArredondado("(81) 90000-0000");
-        txtEspecialidadeId = new CampoArredondado("Ex.: 1");
-        txtBusca           = new CampoArredondado("Buscar por nome, CPF, CRM ou telefone...");
+        txtNome     = new CampoArredondado("Ex.: Dra. Maria Souza");
+        txtCpf      = new CampoArredondado("000.000.000-00");
+        txtCrm      = new CampoArredondado("Ex.: 123456-PE");
+        txtTelefone = new CampoArredondado("(81) 90000-0000");
+        txtBusca    = new CampoArredondado("Buscar por nome, CPF, CRM ou telefone...");
 
-        adicionarCampo(cartao, "Nome completo",       txtNome,            0, 1, 2);
-        adicionarCampo(cartao, "CPF",                 txtCpf,             2, 1, 1);
-        adicionarCampo(cartao, "CRM",                 txtCrm,             0, 3, 1);
-        adicionarCampo(cartao, "Telefone",            txtTelefone,        1, 3, 1);
-        adicionarCampo(cartao, "ID da especialidade", txtEspecialidadeId, 2, 3, 1);
+        // ComboBox Arredondado
+        cbEspecialidade = new ComboArredondado<>("Selecione a especialidade...");
+        cbEspecialidade.setPreferredSize(new Dimension(180, 38));
+
+        adicionarCampoComponente(cartao, "Nome completo",       txtNome,         0, 1, 2);
+        adicionarCampoComponente(cartao, "CPF",                 txtCpf,          2, 1, 1);
+        adicionarCampoComponente(cartao, "CRM",                 txtCrm,          0, 3, 1);
+        adicionarCampoComponente(cartao, "Telefone",            txtTelefone,     1, 3, 1);
+        adicionarCampoComponente(cartao, "Especialidade",       cbEspecialidade, 2, 3, 1);
 
         btnSalvar  = new BotaoArredondado("Cadastrar",         COR_VERDE);
         btnEditar  = new BotaoArredondado("Salvar alterações", COR_AZUL);
@@ -205,7 +232,7 @@ public class TelaMedico extends JFrame {
         cartao.add(topo, BorderLayout.NORTH);
 
         tableModel = new DefaultTableModel(
-                new String[]{"ID", "Nome", "CPF", "CRM", "Telefone", "Especialidade"}, 0) {
+                new String[]{"ID", "Nome", "CPF", "CRM", "Telefone", "Especialidade ID"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -250,8 +277,8 @@ public class TelaMedico extends JFrame {
         return cartao;
     }
 
-    private void adicionarCampo(JPanel painel, String rotulo, JTextField campo,
-                                int x, int y, int largura) {
+    private void adicionarCampoComponente(JPanel painel, String rotulo, JComponent componente,
+                                          int x, int y, int largura) {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.anchor = GridBagConstraints.WEST;
@@ -268,12 +295,22 @@ public class TelaMedico extends JFrame {
 
         gbc.gridy = y + 1;
         gbc.insets = new Insets(0, 8, 2, 8);
-        painel.add(campo, gbc);
+        painel.add(componente, gbc);
     }
 
-    // =====================================================================
-    //  EVENTOS
-    // =====================================================================
+    private void carregarEspecialidadesNoCombo() {
+        cbEspecialidade.removeAllItems();
+        try {
+            List<ItemEspecialidade> lista = especialidadeDAO.listarEspecialidadesParaCombo();
+            for (ItemEspecialidade item : lista) {
+                cbEspecialidade.addItem(item);
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                    "Erro ao carregar especialidades do banco:\n" + e.getMessage(),
+                    "Erro", JOptionPane.ERROR_MESSAGE);
+        }
+    }
 
     private void configurarEventos() {
         btnSalvar.addActionListener(e -> cadastrarMedico());
@@ -303,15 +340,17 @@ public class TelaMedico extends JFrame {
         }
     }
 
-    // =====================================================================
-    //  AÇÕES (CRUD)
-    // =====================================================================
-
     private void cadastrarMedico() {
         if (!validarCampos()) return;
 
+        ItemEspecialidade itemSelecionado = (ItemEspecialidade) cbEspecialidade.getSelectedItem();
+        if (itemSelecionado == null) {
+            JOptionPane.showMessageDialog(this, "Selecione uma especialidade válida!", "Aviso", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
         try {
-            int especialidadeId = Integer.parseInt(txtEspecialidadeId.getText().trim());
+            int especialidadeId = itemSelecionado.getId();
 
             Medico medico = new Medico(
                     txtNome.getText().trim(),
@@ -327,10 +366,8 @@ public class TelaMedico extends JFrame {
             atualizarTabela();
             mostrarStatus("Médico cadastrado com sucesso.", COR_VERDE);
 
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this,
-                    "O ID da especialidade deve ser um número inteiro.",
-                    "Erro de validação", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Erro ao cadastrar médico: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -344,8 +381,11 @@ public class TelaMedico extends JFrame {
 
         if (!validarCampos()) return;
 
+        ItemEspecialidade itemSelecionado = (ItemEspecialidade) cbEspecialidade.getSelectedItem();
+        if (itemSelecionado == null) return;
+
         try {
-            int especialidadeId = Integer.parseInt(txtEspecialidadeId.getText().trim());
+            int especialidadeId = itemSelecionado.getId();
 
             Medico atualizado = new Medico(
                     idMedicoSelecionado,
@@ -362,10 +402,8 @@ public class TelaMedico extends JFrame {
             atualizarTabela();
             mostrarStatus("Dados do médico atualizados.", COR_AZUL);
 
-        } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this,
-                    "O ID da especialidade deve ser um número inteiro.",
-                    "Erro de validação", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Erro ao atualizar médico: " + e.getMessage(), "Erro", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -389,10 +427,6 @@ public class TelaMedico extends JFrame {
         }
     }
 
-    // =====================================================================
-    //  APOIO
-    // =====================================================================
-
     private void preencherCamposComLinhaSelecionada() {
         int linhaView = tabelaMedicos.getSelectedRow();
         if (linhaView == -1) return;
@@ -403,7 +437,15 @@ public class TelaMedico extends JFrame {
         txtCpf.setText(String.valueOf(tableModel.getValueAt(linha, 2)));
         txtCrm.setText(String.valueOf(tableModel.getValueAt(linha, 3)));
         txtTelefone.setText(String.valueOf(tableModel.getValueAt(linha, 4)));
-        txtEspecialidadeId.setText(String.valueOf(tableModel.getValueAt(linha, 5)));
+
+        int idEspTabela = (int) tableModel.getValueAt(linha, 5);
+        for (int i = 0; i < cbEspecialidade.getItemCount(); i++) {
+            ItemEspecialidade item = cbEspecialidade.getItemAt(i);
+            if (item.getId() == idEspTabela) {
+                cbEspecialidade.setSelectedIndex(i);
+                break;
+            }
+        }
 
         btnSalvar.setEnabled(false);
         btnEditar.setEnabled(true);
@@ -417,8 +459,7 @@ public class TelaMedico extends JFrame {
         if (txtNome.getText().trim().isEmpty()
                 || txtCpf.getText().trim().isEmpty()
                 || txtCrm.getText().trim().isEmpty()
-                || txtTelefone.getText().trim().isEmpty()
-                || txtEspecialidadeId.getText().trim().isEmpty()) {
+                || txtTelefone.getText().trim().isEmpty()) {
 
             JOptionPane.showMessageDialog(this,
                     "Preencha todos os campos obrigatórios!",
@@ -457,7 +498,7 @@ public class TelaMedico extends JFrame {
         txtCpf.setText("");
         txtCrm.setText("");
         txtTelefone.setText("");
-        txtEspecialidadeId.setText("");
+        if (cbEspecialidade.getItemCount() > 0) cbEspecialidade.setSelectedIndex(0);
         tabelaMedicos.clearSelection();
 
         btnSalvar.setEnabled(true);
@@ -522,9 +563,76 @@ public class TelaMedico extends JFrame {
         });
     }
 
-    // ====================================================================
+    // =====================================================================
     //  COMPONENTES VISUAIS PERSONALIZADOS
-    // ====================================================================
+    // =====================================================================
+
+    private static class ComboArredondado<E> extends JComboBox<E> {
+        ComboArredondado(String dica) {
+            setOpaque(false);
+            setFont(fonte(Font.PLAIN, 14));
+            setForeground(COR_TEXTO);
+            setBackground(new Color(248, 250, 252));
+            setBorder(new EmptyBorder(4, 10, 4, 10));
+
+            setUI(new javax.swing.plaf.basic.BasicComboBoxUI() {
+                @Override
+                protected JButton createArrowButton() {
+                    JButton botao = new JButton("▼") {
+                        @Override
+                        protected void paintComponent(Graphics g) {
+                            Graphics2D g2 = (Graphics2D) g.create();
+                            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                            g2.setColor(COR_TEXTO_SUAVE);
+                            g2.setFont(fonte(Font.PLAIN, 10));
+                            FontMetrics fm = g2.getFontMetrics();
+                            int x = (getWidth() - fm.stringWidth("▼")) / 2;
+                            int y = (getHeight() - fm.getHeight()) / 2 + fm.getAscent();
+                            g2.drawString("▼", x, y);
+                            g2.dispose();
+                        }
+                    };
+                    botao.setBorder(BorderFactory.createEmptyBorder());
+                    botao.setContentAreaFilled(false);
+                    botao.setFocusPainted(false);
+                    return botao;
+                }
+            });
+
+            setRenderer(new DefaultListCellRenderer() {
+                @Override
+                public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
+                    JLabel lbl = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                    lbl.setFont(fonte(Font.PLAIN, 13));
+                    lbl.setBorder(new EmptyBorder(6, 10, 6, 10));
+                    if (isSelected) {
+                        lbl.setBackground(new Color(207, 236, 242));
+                        lbl.setForeground(COR_TEXTO);
+                    } else {
+                        lbl.setBackground(Color.WHITE);
+                        lbl.setForeground(COR_TEXTO);
+                    }
+                    return lbl;
+                }
+            });
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            g2.setColor(new Color(248, 250, 252));
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), 18, 18);
+
+            g2.setStroke(new BasicStroke(1.2f));
+            g2.setColor(hasFocus() ? COR_PRIMARIA : COR_BORDA);
+            g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 18, 18);
+
+            g2.dispose();
+            super.paintComponent(g);
+        }
+    }
 
     private static class BotaoArredondado extends JButton {
         private final Color corBase;
@@ -734,12 +842,5 @@ public class TelaMedico extends JFrame {
             setHorizontalAlignment(coluna == 0 || coluna == 5 ? SwingConstants.CENTER : SwingConstants.LEFT);
             return this;
         }
-    }
-
-    // Metodo main para inicialização direta da tela
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            new TelaMedico().setVisible(true);
-        });
     }
 }

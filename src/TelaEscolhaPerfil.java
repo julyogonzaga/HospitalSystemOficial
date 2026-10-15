@@ -1,6 +1,5 @@
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.plaf.basic.BasicScrollBarUI;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -11,17 +10,16 @@ import java.awt.event.MouseEvent;
  */
 public class TelaEscolhaPerfil extends JFrame {
 
-    // ---------- Paleta de cores (Mantida do padrão anterior) ----------
+    // ---------- Paleta de cores ----------
     private static final Color COR_PRIMARIA        = new Color(13, 110, 130);
     private static final Color COR_PRIMARIA_ESCURA = new Color(9, 78, 99);
     private static final Color COR_FUNDO           = new Color(241, 245, 249);
     private static final Color COR_TEXTO           = new Color(30, 41, 59);
-    private static final Color COR_TEXTO_SUAVE     = new Color(100, 116, 139);
 
     // Cores específicas para cada perfil
-    private static final Color COR_MEDICO          = new Color(13, 110, 130);   // Azul petro/clínico
+    private static final Color COR_MEDICO          = new Color(13, 110, 130);   // Azul clínico
     private static final Color COR_PACIENTE        = new Color(22, 163, 74);   // Verde acolhedor
-    private static final Color COR_ADM             = new Color(220, 38, 38);   // Vermelho/Laranja de gestão
+    private static final Color COR_ADM             = new Color(220, 38, 38);   // Vermelho de gestão
 
     public TelaEscolhaPerfil() {
         setTitle("Sistema Hospitalar — Seleção de Perfil");
@@ -105,7 +103,6 @@ public class TelaEscolhaPerfil extends JFrame {
 
         // Ações de clique (Transição de telas)
         btnMedico.addActionListener(e -> {
-            // Abre a sua tela de médicos existente e fecha esta tela de seleção
             new TelaMedico().setVisible(true);
             dispose();
         });
@@ -114,14 +111,13 @@ public class TelaEscolhaPerfil extends JFrame {
             JOptionPane.showMessageDialog(this,
                     "Redirecionando para o Portal do Paciente...",
                     "Paciente", JOptionPane.INFORMATION_MESSAGE);
-            // Aqui você pode instanciar a TelaPaciente futuramente: new TelaPaciente().setVisible(true); dispose();
+            // Futuramente: new TelaPaciente().setVisible(true); dispose();
         });
 
+        // Integração correta abrindo a Tela de Login do Administrador
         btnAdm.addActionListener(e -> {
-            JOptionPane.showMessageDialog(this,
-                    "Redirecionando para o Painel Administrativo...",
-                    "Administração", JOptionPane.INFORMATION_MESSAGE);
-            // Aqui você pode instanciar a TelaAdm futuramente: new TelaAdm().setVisible(true); dispose();
+            new TelaLoginAdm().setVisible(true);
+            dispose();
         });
 
         gbc.insets = new Insets(8, 0, 8, 0);
@@ -153,7 +149,7 @@ public class TelaEscolhaPerfil extends JFrame {
                 Math.round(a.getBlue()  + (b.getBlue()  - a.getBlue())  * t));
     }
 
-    /** Botão arredondado com efeito interativo (mesmo padrão da TelaMedico). */
+    /** Botão arredondado com efeito interativo. */
     private static class BotaoArredondado extends JButton {
         private final Color corBase;
         private boolean sobre, pressionado;
@@ -178,7 +174,7 @@ public class TelaEscolhaPerfil extends JFrame {
 
         @Override
         public Dimension getPreferredSize() {
-            return new Dimension(340, 48); // Botões largos e confortáveis
+            return new Dimension(340, 48);
         }
 
         @Override
@@ -211,7 +207,7 @@ public class TelaEscolhaPerfil extends JFrame {
         }
     }
 
-    /** Painel central com efeito de cartão flutuante e sombra (mesmo padrão). */
+    /** Painel central com efeito de cartão flutuante e sombra (Corrigido). */
     private static class PainelCartao extends JPanel {
         private static final int SOMBRA = 6;
         private static final int RAIO = 22;
@@ -233,8 +229,8 @@ public class TelaEscolhaPerfil extends JFrame {
                 g2.fillRoundRect(
                         recuo,
                         recuo + 2,
-                        getWidth() - 2 * recuo,
-                        getHeight() - 2 * recuo - 2,
+                        getWidth() - (2 * recuo),
+                        getHeight() - (2 * recuo) - 2,
                         RAIO + (SOMBRA - recuo) * 2,
                         RAIO + (SOMBRA - recuo) * 2
                 );
@@ -244,8 +240,8 @@ public class TelaEscolhaPerfil extends JFrame {
             g2.fillRoundRect(
                     SOMBRA,
                     SOMBRA,
-                    getWidth() - 2 * SOMBRA,
-                    getHeight() - 2 * SOMBRA - 2,
+                    getWidth() - (2 * SOMBRA),
+                    getHeight() - (2 * SOMBRA) - 2,
                     RAIO,
                     RAIO
             );
@@ -277,7 +273,7 @@ public class TelaEscolhaPerfil extends JFrame {
         }
     }
 
-    // Metodo main para iniciar o sistema por esta tela de seleção de perfil
+    // Método main: agora o sistema inicia por aqui!
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             new TelaEscolhaPerfil().setVisible(true);
