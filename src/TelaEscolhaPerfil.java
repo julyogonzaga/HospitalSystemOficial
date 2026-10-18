@@ -273,7 +273,7 @@ public class TelaEscolhaPerfil extends JFrame {
         }
     }
 
-    // Método main: agora o sistema inicia por aqui!
+    // Metodo main: agora o sistema inicia por aqui!
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             new TelaEscolhaPerfil().setVisible(true);
