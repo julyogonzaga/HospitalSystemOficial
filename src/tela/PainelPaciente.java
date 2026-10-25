@@ -6,6 +6,9 @@ import util.Validador;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.plaf.basic.BasicComboBoxUI;
+import javax.swing.plaf.basic.BasicComboPopup;
+import javax.swing.plaf.basic.ComboPopup;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
@@ -52,7 +55,7 @@ public class PainelPaciente extends JPanel {
     private final CampoArredondado campoNascimento;
     private final CampoArredondado campoEmail;
     private final CampoArredondado campoCpf;
-    private final JComboBox<String> comboExame; // Seletor do tipo de exame/consulta
+    private final ComboArredondado<String> comboExame;
 
     private final BotaoArredondado btnCadastrar;
     private final BotaoArredondado btnAtualizar;
@@ -82,12 +85,9 @@ public class PainelPaciente extends JPanel {
         campoEmail = new CampoArredondado("exemplo@email.com");
         campoCpf = new CampoArredondado("000.000.000-00");
 
-        // Inicialização do JComboBox com opções de exames/consultas
-        comboExame = new JComboBox<>(new String[]{
+        comboExame = new ComboArredondado<>(new String[]{
                 "Consulta Geral", "Cardiologia", "Ortopedia", "Exame de Sangue", "Raio-X", "Pediatria"
         });
-        comboExame.setFont(fonte(Font.PLAIN, 13));
-        comboExame.setBackground(Color.WHITE);
 
         // Linha 0: Nome completo e Nascimento
         adicionarCampo(cartaoForm, gbc, "Nome completo:", campoNome, 0, 0, 3, 0.7);
@@ -289,7 +289,6 @@ public class PainelPaciente extends JPanel {
             if (atendido == null) {
                 JOptionPane.showMessageDialog(this, "Não há pacientes na fila de espera.", "Aviso", JOptionPane.INFORMATION_MESSAGE);
             } else {
-                // Simulação dinâmica do médico responsável com base na especialidade/exame escolhido
                 String medicoResponsavel = "Dr. Carlos Silva";
                 String especialidade = atendido.getTipoExame() != null ? atendido.getTipoExame() : "Clínico Geral";
 
@@ -414,7 +413,7 @@ public class PainelPaciente extends JPanel {
     }
 
     // =================================================================
-    //  COMPONENTES VISUAIS PERSONALIZADOS
+    //  COMPONENTES VISUAIS PERSONALIZADOS (Arredondados)
     // =================================================================
 
     private static Font fonte(int estilo, int tamanho) {
@@ -460,6 +459,44 @@ public class PainelPaciente extends JPanel {
                 g3.drawString(dica, getInsets().left, y);
                 g3.dispose();
             }
+        }
+    }
+
+    private static class ComboArredondado<E> extends JComboBox<E> {
+        ComboArredondado(E[] itens) {
+            super(itens);
+            setOpaque(false);
+            setFont(fonte(Font.PLAIN, 13));
+            setForeground(COR_TEXTO);
+            setBackground(new Color(248, 250, 252));
+            setBorder(new EmptyBorder(4, 8, 4, 8));
+            setUI(new BasicComboBoxUI() {
+                @Override
+                protected JButton createArrowButton() {
+                    JButton botao = new JButton("▼");
+                    botao.setFont(fonte(Font.PLAIN, 10));
+                    botao.setForeground(COR_TEXTO_SUAVE);
+                    botao.setOpaque(false);
+                    botao.setContentAreaFilled(false);
+                    botao.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 8));
+                    return botao;
+                }
+            });
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+            g2.setColor(new Color(248, 250, 252));
+            g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 16, 16);
+            boolean foco = hasFocus();
+            g2.setStroke(new BasicStroke(foco ? 1.8f : 1.2f));
+            g2.setColor(foco ? COR_PRIMARIA : COR_BORDA);
+            g2.drawRoundRect(1, 1, getWidth() - 3, getHeight() - 3, 16, 16);
+            g2.dispose();
+
+            super.paintComponent(g);
         }
     }
 
