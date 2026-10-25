@@ -3,6 +3,7 @@ package dao;
 import bd.ConexaoBanco;
 import estrutura.Pacientes;
 import tela.PainelPaciente;
+import util.Validador;
 
 import java.sql.Connection;
 import java.sql.Date;
