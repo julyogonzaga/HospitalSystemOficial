@@ -1,3 +1,8 @@
+package dao;
+import bd.ConexaoBanco;
+import estrutura.Medico;
+import tela.TelaMedico;
+
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;

@@ -1,3 +1,10 @@
+package tela;
+import estrutura.Medico;
+import dao.MedicoDAO;
+import tela.TelaEscolhaPerfil;
+import bd.ConexaoBanco;
+
+import dao.EspecialidadeDAO;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;

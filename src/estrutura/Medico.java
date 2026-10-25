@@ -1,3 +1,4 @@
+package estrutura;
 public class Medico {
     private int idMedico;
     private String nome;
