@@ -16,6 +16,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.format.ResolverStyle;
@@ -51,6 +52,7 @@ public class PainelPaciente extends JPanel {
     private final CampoArredondado campoNascimento;
     private final CampoArredondado campoEmail;
     private final CampoArredondado campoCpf;
+    private final JComboBox<String> comboExame; // Seletor do tipo de exame/consulta
 
     private final BotaoArredondado btnCadastrar;
     private final BotaoArredondado btnAtualizar;
@@ -68,7 +70,7 @@ public class PainelPaciente extends JPanel {
         setBorder(new EmptyBorder(12, 16, 16, 16));
 
         // =================================================================
-        //  FORMULÁRIO (TOPO) - Alinhamento Proporcional
+        //  FORMULÁRIO (TOPO)
         // =================================================================
         PainelCartao cartaoForm = new PainelCartao(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
@@ -80,6 +82,13 @@ public class PainelPaciente extends JPanel {
         campoEmail = new CampoArredondado("exemplo@email.com");
         campoCpf = new CampoArredondado("000.000.000-00");
 
+        // Inicialização do JComboBox com opções de exames/consultas
+        comboExame = new JComboBox<>(new String[]{
+                "Consulta Geral", "Cardiologia", "Ortopedia", "Exame de Sangue", "Raio-X", "Pediatria"
+        });
+        comboExame.setFont(fonte(Font.PLAIN, 13));
+        comboExame.setBackground(Color.WHITE);
+
         // Linha 0: Nome completo e Nascimento
         adicionarCampo(cartaoForm, gbc, "Nome completo:", campoNome, 0, 0, 3, 0.7);
         adicionarCampo(cartaoForm, gbc, "Data Nasc.:", campoNascimento, 3, 0, 1, 0.3);
@@ -87,6 +96,9 @@ public class PainelPaciente extends JPanel {
         // Linha 1: E-mail e CPF
         adicionarCampo(cartaoForm, gbc, "E-mail:", campoEmail, 0, 1, 2, 0.5);
         adicionarCampo(cartaoForm, gbc, "CPF:", campoCpf, 2, 1, 2, 0.5);
+
+        // Linha 2: Tipo de Exame / Consulta
+        adicionarCampo(cartaoForm, gbc, "Tipo de Exame / Consulta:", comboExame, 0, 2, 4, 1.0);
 
         // Botões de Ação
         btnCadastrar = new BotaoArredondado("Cadastrar", COR_VERDE);
@@ -105,7 +117,7 @@ public class PainelPaciente extends JPanel {
         painelBotoes.add(btnCadastrar);
 
         gbc.gridx = 0;
-        gbc.gridy = 4;
+        gbc.gridy = 6;
         gbc.gridwidth = 4;
         gbc.weightx = 1.0;
         gbc.insets = new Insets(14, 8, 4, 8);
@@ -117,7 +129,7 @@ public class PainelPaciente extends JPanel {
         PainelCartao cartaoTabela = new PainelCartao(new BorderLayout(0, 10));
 
         modeloTabela = new DefaultTableModel(
-                new String[]{"Posição", "ID", "Nome", "Nascimento", "Email", "CPF", "Chegada"}, 0) {
+                new String[]{"Posição", "ID", "Nome", "Nascimento", "Email", "CPF", "Exame/Consulta", "Chegada"}, 0) {
             @Override public boolean isCellEditable(int row, int column) { return false; }
         };
 
@@ -177,7 +189,6 @@ public class PainelPaciente extends JPanel {
         new Timer(INTERVALO_ATUALIZACAO_MS, e -> atualizarAutomaticamente()).start();
     }
 
-    // Método auxiliar corrigido para alinhar os campos do formulário proporcionalmente
     private void adicionarCampo(JPanel painel, GridBagConstraints gbc, String rotulo, JComponent campo, int x, int y, int largura, double peso) {
         gbc.gridx = x;
         gbc.gridy = y * 2;
@@ -232,9 +243,9 @@ public class PainelPaciente extends JPanel {
         if (dados == null) return;
 
         executar(() -> {
-            Pacientes p = dao.cadastrar(dados.nome, dados.nascimento, dados.email, dados.cpf);
+            Pacientes p = dao.cadastrar(dados.nome, dados.nascimento, dados.email, dados.cpf, dados.tipoExame, LocalDateTime.now());
             int posicao = dao.posicaoNaFila(p.getId());
-            return p.getNome() + " cadastrado(a) com sucesso!\nPosição na fila: " + posicao + "º";
+            return p.getNome() + " cadastrado(a) com sucesso!\nExame: " + dados.tipoExame + "\nPosição na fila: " + posicao + "º";
         }, mensagem -> {
             JOptionPane.showMessageDialog(this, mensagem, "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             limparFormulario();
@@ -249,7 +260,7 @@ public class PainelPaciente extends JPanel {
 
         final int id = idSelecionado;
         executar(() -> {
-            dao.atualizar(id, dados.nome, dados.nascimento, dados.email, dados.cpf);
+            dao.atualizar(id, dados.nome, dados.nascimento, dados.email, dados.cpf, dados.tipoExame);
             return null;
         }, resultado -> {
             limparFormulario();
@@ -278,7 +289,16 @@ public class PainelPaciente extends JPanel {
             if (atendido == null) {
                 JOptionPane.showMessageDialog(this, "Não há pacientes na fila de espera.", "Aviso", JOptionPane.INFORMATION_MESSAGE);
             } else {
-                JOptionPane.showMessageDialog(this, "📢 Chamando Paciente: " + atendido.getNome(), "Atendimento", JOptionPane.INFORMATION_MESSAGE);
+                // Simulação dinâmica do médico responsável com base na especialidade/exame escolhido
+                String medicoResponsavel = "Dr. Carlos Silva";
+                String especialidade = atendido.getTipoExame() != null ? atendido.getTipoExame() : "Clínico Geral";
+
+                String mensagem = "📢 Chamando Paciente: " + atendido.getNome() + "\n" +
+                        "Serviço/Exame: " + especialidade + "\n\n" +
+                        "Dirija-se ao consultório de:\n" +
+                        medicoResponsavel + " (" + especialidade + ")";
+
+                JOptionPane.showMessageDialog(this, mensagem, "Chamada de Atendimento", JOptionPane.INFORMATION_MESSAGE);
             }
             limparFormulario();
             atualizarTabela();
@@ -308,6 +328,7 @@ public class PainelPaciente extends JPanel {
                     p.getNascimento().format(FORMATO_DATA),
                     p.getEmail(),
                     Validador.formatarCpf(p.getCpf()),
+                    p.getTipoExame(),
                     p.getHoraChegada().format(FORMATO_HORA)
             });
         }
@@ -324,6 +345,11 @@ public class PainelPaciente extends JPanel {
         campoEmail.setText((String) modeloTabela.getValueAt(linha, 4));
         campoCpf.setText((String) modeloTabela.getValueAt(linha, 5));
 
+        String tipoExameTabela = (String) modeloTabela.getValueAt(linha, 6);
+        if (tipoExameTabela != null) {
+            comboExame.setSelectedItem(tipoExameTabela);
+        }
+
         btnCadastrar.setEnabled(false);
         btnAtualizar.setEnabled(true);
         btnRemover.setEnabled(true);
@@ -334,6 +360,7 @@ public class PainelPaciente extends JPanel {
         campoNascimento.setText("");
         campoEmail.setText("");
         campoCpf.setText("");
+        comboExame.setSelectedIndex(0);
         idSelecionado = null;
         tabela.clearSelection();
 
@@ -347,6 +374,7 @@ public class PainelPaciente extends JPanel {
         String nascimentoTexto = campoNascimento.getText().trim();
         String email = campoEmail.getText().trim();
         String cpf = Validador.somenteDigitos(campoCpf.getText());
+        String tipoExame = (String) comboExame.getSelectedItem();
 
         if (nome.isEmpty()) {
             avisar("Informe o nome completo.");
@@ -371,7 +399,7 @@ public class PainelPaciente extends JPanel {
             return null;
         }
 
-        return new DadosFormulario(nome, nascimento, email, cpf);
+        return new DadosFormulario(nome, nascimento, email, cpf, tipoExame);
     }
 
     private void avisar(String mensagem) {
@@ -386,7 +414,7 @@ public class PainelPaciente extends JPanel {
     }
 
     // =================================================================
-    //  COMPONENTES VISUAIS PERSONALIZADOS (Padrão Arredondado)
+    //  COMPONENTES VISUAIS PERSONALIZADOS
     // =================================================================
 
     private static Font fonte(int estilo, int tamanho) {
@@ -532,12 +560,14 @@ public class PainelPaciente extends JPanel {
         final LocalDate nascimento;
         final String email;
         final String cpf;
+        final String tipoExame;
 
-        DadosFormulario(String nome, LocalDate nascimento, String email, String cpf) {
+        DadosFormulario(String nome, LocalDate nascimento, String email, String cpf, String tipoExame) {
             this.nome = nome;
             this.nascimento = nascimento;
             this.email = email;
             this.cpf = cpf;
+            this.tipoExame = tipoExame;
         }
     }
 }
