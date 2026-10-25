@@ -1,9 +1,10 @@
 package estrutura;
+import dao.PacienteDAO;
 import tela.PainelPaciente;
 import util.Validador;
-import dao.PacienteDAO;
-import bd.ConexaoBanco;
 import bd.ConexaoBD;
+import bd.ConexaoBanco;
+import dao.EspecialidadeDAO;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
