@@ -1,4 +1,7 @@
 package util;
+import tela.PainelPaciente;
+import estrutura.Pacientes;
+import dao.PacienteDAO;
 
 import java.util.regex.Pattern;
 

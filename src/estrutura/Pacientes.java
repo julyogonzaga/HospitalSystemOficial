@@ -1,4 +1,8 @@
 package estrutura;
+import tela.PainelPaciente;
+import util.Validador;
+import bd.ConexaoBanco;
+import bd.ConexaoBD;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;

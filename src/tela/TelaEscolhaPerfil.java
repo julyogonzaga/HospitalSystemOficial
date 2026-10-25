@@ -1,7 +1,9 @@
 package tela;
+
 import dao.MedicoDAO;
 import estrutura.Medico;
-import tela.PainelPaciente;
+import estrutura.Pacientes;
+import dao.PacienteDAO;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -112,11 +114,15 @@ public class TelaEscolhaPerfil extends JFrame {
             dispose();
         });
 
+        // Abertura integrada da tela/painel de pacientes
         btnPaciente.addActionListener(e -> {
-            JOptionPane.showMessageDialog(this,
-                    "Redirecionando para o Portal do Paciente...",
-                    "Paciente", JOptionPane.INFORMATION_MESSAGE);
-            // Futuramente: new TelaPaciente().setVisible(true); dispose();
+            JFrame janelaPaciente = new JFrame("Portal do Paciente — Fila de Atendimento");
+            janelaPaciente.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            janelaPaciente.setSize(950, 600);
+            janelaPaciente.setLocationRelativeTo(this);
+            janelaPaciente.add(new PainelPaciente());
+            janelaPaciente.setVisible(true);
+            dispose();
         });
 
         // Integração correta abrindo a Tela de Login do Administrador
@@ -212,7 +218,7 @@ public class TelaEscolhaPerfil extends JFrame {
         }
     }
 
-    /** Painel central com efeito de cartão flutuante e sombra (Corrigido). */
+    /** Painel central com efeito de cartão flutuante e sombra corrigido. */
     private static class PainelCartao extends JPanel {
         private static final int SOMBRA = 6;
         private static final int RAIO = 22;
@@ -278,7 +284,7 @@ public class TelaEscolhaPerfil extends JFrame {
         }
     }
 
-    // Metodo main: agora o sistema inicia por aqui!
+    // Método main: inicializa o sistema pela tela de escolha de perfil
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             new TelaEscolhaPerfil().setVisible(true);

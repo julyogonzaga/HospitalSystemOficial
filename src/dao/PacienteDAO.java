@@ -2,6 +2,7 @@ package dao;
 
 import bd.ConexaoBanco;
 import estrutura.Pacientes;
+import tela.PainelPaciente;
 
 import java.sql.Connection;
 import java.sql.Date;
