@@ -1,6 +1,6 @@
 package util;
-import tela.PainelPaciente;
 import estrutura.Pacientes;
+import tela.PainelPaciente;
 import dao.PacienteDAO;
 
 import java.util.regex.Pattern;
@@ -21,33 +21,19 @@ public final class Validador {
         return email != null && email.length() <= 100 && EMAIL.matcher(email).matches();
     }
 
-    // Valida o CPF pelos dois dígitos verificadores (não basta ter 11 números)
+    // Aceita qualquer CPF que tenha exatamente 11 dígitos numéricos
     public static boolean cpfValido(String cpf) {
-        if (cpf == null || !cpf.matches("\\d{11}")) {
-            return false;
-        }
-        if (cpf.chars().distinct().count() == 1) {
-            return false; // rejeita 111.111.111-11, 000.000.000-00 etc.
-        }
-        return calcularDigito(cpf, 9) == cpf.charAt(9) - '0'
-                && calcularDigito(cpf, 10) == cpf.charAt(10) - '0';
-    }
-
-    private static int calcularDigito(String cpf, int quantidade) {
-        int soma = 0;
-        for (int i = 0; i < quantidade; i++) {
-            soma += (cpf.charAt(i) - '0') * (quantidade + 1 - i);
-        }
-        int resto = (soma * 10) % 11;
-        return resto == 10 ? 0 : resto;
+        String digitos = somenteDigitos(cpf);
+        return digitos.length() == 11;
     }
 
     // 12345678909 -> 123.456.789-09
     public static String formatarCpf(String cpf) {
-        if (cpf == null || cpf.length() != 11) {
+        String digitos = somenteDigitos(cpf);
+        if (digitos.length() != 11) {
             return cpf;
         }
-        return cpf.substring(0, 3) + "." + cpf.substring(3, 6) + "."
-                + cpf.substring(6, 9) + "-" + cpf.substring(9);
+        return digitos.substring(0, 3) + "." + digitos.substring(3, 6) + "."
+                + digitos.substring(6, 9) + "-" + digitos.substring(9);
     }
 }
