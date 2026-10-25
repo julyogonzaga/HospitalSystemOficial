@@ -7,8 +7,6 @@ import util.Validador;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.plaf.basic.BasicComboBoxUI;
-import javax.swing.plaf.basic.BasicComboPopup;
-import javax.swing.plaf.basic.ComboPopup;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
@@ -85,9 +83,8 @@ public class PainelPaciente extends JPanel {
         campoEmail = new CampoArredondado("exemplo@email.com");
         campoCpf = new CampoArredondado("000.000.000-00");
 
-        comboExame = new ComboArredondado<>(new String[]{
-                "Consulta Geral", "Cardiologia", "Ortopedia", "Exame de Sangue", "Raio-X", "Pediatria"
-        });
+        // Inicializa provisoriamente com "Carregando..." enquanto busca no banco
+        comboExame = new ComboArredondado<>(new String[]{"Carregando..."});
 
         // Linha 0: Nome completo e Nascimento
         adicionarCampo(cartaoForm, gbc, "Nome completo:", campoNome, 0, 0, 3, 0.7);
@@ -97,7 +94,7 @@ public class PainelPaciente extends JPanel {
         adicionarCampo(cartaoForm, gbc, "E-mail:", campoEmail, 0, 1, 2, 0.5);
         adicionarCampo(cartaoForm, gbc, "CPF:", campoCpf, 2, 1, 2, 0.5);
 
-        // Linha 2: Tipo de Exame / Consulta
+        // Linha 2: Tipo de Exame / Consulta (Especialidades do Banco)
         adicionarCampo(cartaoForm, gbc, "Tipo de Exame / Consulta:", comboExame, 0, 2, 4, 1.0);
 
         // Botões de Ação
@@ -185,6 +182,8 @@ public class PainelPaciente extends JPanel {
             if (!e.getValueIsAdjusting()) carregarSelecaoNoFormulario();
         });
 
+        // Carrega os dados iniciais
+        carregarEspecialidades();
         atualizarTabela();
         new Timer(INTERVALO_ATUALIZACAO_MS, e -> atualizarAutomaticamente()).start();
     }
@@ -238,6 +237,19 @@ public class PainelPaciente extends JPanel {
         executar(tarefa, aoConcluir, this::tratarErro, escrita);
     }
 
+    private void carregarEspecialidades() {
+        executar(dao::listarEspecialidades, especialidades -> {
+            comboExame.removeAllItems();
+            if (especialidades.isEmpty()) {
+                comboExame.addItem("Nenhuma especialidade cadastrada");
+            } else {
+                for (String esp : especialidades) {
+                    comboExame.addItem(esp);
+                }
+            }
+        }, false);
+    }
+
     private void cadastrarPaciente() {
         DadosFormulario dados = lerFormulario();
         if (dados == null) return;
@@ -245,7 +257,7 @@ public class PainelPaciente extends JPanel {
         executar(() -> {
             Pacientes p = dao.cadastrar(dados.nome, dados.nascimento, dados.email, dados.cpf, dados.tipoExame, LocalDateTime.now());
             int posicao = dao.posicaoNaFila(p.getId());
-            return p.getNome() + " cadastrado(a) com sucesso!\nExame: " + dados.tipoExame + "\nPosição na fila: " + posicao + "º";
+            return p.getNome() + " cadastrado(a) com sucesso!\nExame/Especialidade: " + dados.tipoExame + "\nPosição na fila: " + posicao + "º";
         }, mensagem -> {
             JOptionPane.showMessageDialog(this, mensagem, "Sucesso", JOptionPane.INFORMATION_MESSAGE);
             limparFormulario();
@@ -293,7 +305,7 @@ public class PainelPaciente extends JPanel {
                 String especialidade = atendido.getTipoExame() != null ? atendido.getTipoExame() : "Clínico Geral";
 
                 String mensagem = "📢 Chamando Paciente: " + atendido.getNome() + "\n" +
-                        "Serviço/Exame: " + especialidade + "\n\n" +
+                        "Serviço/Especialidade: " + especialidade + "\n\n" +
                         "Dirija-se ao consultório de:\n" +
                         medicoResponsavel + " (" + especialidade + ")";
 
@@ -359,7 +371,9 @@ public class PainelPaciente extends JPanel {
         campoNascimento.setText("");
         campoEmail.setText("");
         campoCpf.setText("");
-        comboExame.setSelectedIndex(0);
+        if (comboExame.getItemCount() > 0) {
+            comboExame.setSelectedIndex(0);
+        }
         idSelecionado = null;
         tabela.clearSelection();
 

@@ -112,4 +112,20 @@ public class PacienteDAO {
         }
         return -1;
     }
+
+    // Método para buscar as especialidades diretamente da tabela 'especialidades' do banco
+    public List<String> listarEspecialidades() throws SQLException {
+        String sql = "SELECT nome_especialidade FROM especialidades ORDER BY nome_especialidade ASC";
+        List<String> lista = new ArrayList<>();
+
+        try (Connection con = ConexaoBanco.getConexao();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                lista.add(rs.getString("nome_especialidade"));
+            }
+        }
+        return lista;
+    }
 }
