@@ -1,7 +1,14 @@
 package tela;
+
+import dao.PacienteDAO;
+import estrutura.Pacientes;
+import bd.ConexaoBD;
+import bd.ConexaoBanco;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.sql.SQLException;
 
 public class TelaPainelAdm extends JFrame {
 
@@ -10,13 +17,15 @@ public class TelaPainelAdm extends JFrame {
     private static final Color COR_VERDE = new Color(22, 163, 74);
     private static final Color COR_TEXTO = new Color(30, 41, 59);
 
+    private final PacienteDAO dao = new PacienteDAO();
+
     private JLabel lblPacienteChamado;
     private JButton btnChamarProximo;
 
     public TelaPainelAdm() {
         setTitle("Sistema Hospitalar — Painel do Administrador (Chamada de Pacientes)");
-        setSize(800, 500);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(850, 500);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
 
         JPanel raiz = new JPanel(new BorderLayout());
@@ -54,7 +63,7 @@ public class TelaPainelAdm extends JFrame {
 
         gbc.gridy = 1;
         lblPacienteChamado = new JLabel("Nenhum paciente chamado", SwingConstants.CENTER);
-        lblPacienteChamado.setFont(new Font("Segoe UI", Font.BOLD, 28));
+        lblPacienteChamado.setFont(new Font("Segoe UI", Font.BOLD, 24));
         lblPacienteChamado.setForeground(COR_PRIMARIA);
         painel.add(lblPacienteChamado, gbc);
 
@@ -63,13 +72,43 @@ public class TelaPainelAdm extends JFrame {
         btnChamarProximo = new BotaoArredondado("Chamar Próximo Paciente", COR_VERDE);
         painel.add(btnChamarProximo, gbc);
 
-        // Ação provisória (aguardando o código de pacientes do seu colega)
-        btnChamarProximo.addActionListener(e -> {
-            // Futuramente aqui puxaremos o próximo paciente da lista cadastrada pelo seu colega
-            lblPacienteChamado.setText("Exemplo: Maria da Silva (Consultório 02)");
-        });
+        // Ação real conectada ao PacienteDAO para chamar o próximo da fila
+        btnChamarProximo.addActionListener(e -> chamarProximoPaciente());
 
         return painel;
+    }
+
+    private void chamarProximoPaciente() {
+        // Executa em segundo plano para não travar a interface gráfica
+        new SwingWorker<Pacientes, Void>() {
+            @Override
+            protected Pacientes doInBackground() throws Exception {
+                return dao.atenderProximo(); // Pega o primeiro da fila e marca como atendido no banco
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    Pacientes proximo = get();
+                    if (proximo == null) {
+                        JOptionPane.showMessageDialog(TelaPainelAdm.this,
+                                "Não há pacientes aguardando na fila de espera.",
+                                "Fila Vazia", JOptionPane.INFORMATION_MESSAGE);
+                        lblPacienteChamado.setText("Nenhum paciente na fila");
+                    } else {
+                        // Exibe o nome e a especialidade/exame escolhido do banco
+                        String especialidade = proximo.getTipoExame() != null ? proximo.getTipoExame() : "Clínico Geral";
+                        lblPacienteChamado.setText("<html><center>" + proximo.getNome() +
+                                "<br><font size='5' color='#16a34a'>Especialidade: " + especialidade + "</font></center></html>");
+                    }
+                } catch (Exception ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(TelaPainelAdm.this,
+                            "Erro ao chamar próximo paciente:\n" + ex.getMessage(),
+                            "Erro", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        }.execute();
     }
 
     private static class BotaoArredondado extends JButton {

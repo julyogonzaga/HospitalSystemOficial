@@ -2,8 +2,8 @@ package dao;
 
 import bd.ConexaoBanco;
 import estrutura.Pacientes;
-import tela.PainelPaciente;
 import util.Validador;
+import tela.TelaPainelAdm;
 
 import java.sql.*;
 import java.time.LocalDateTime;
@@ -39,6 +39,32 @@ public class PacienteDAO {
 
     public List<Pacientes> listarFila() throws SQLException {
         String sql = "SELECT * FROM pacientes WHERE atendido = 0 ORDER BY hora_chegada ASC";
+        List<Pacientes> lista = new ArrayList<>();
+
+        try (Connection con = ConexaoBanco.getConexao();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                Pacientes p = new Pacientes(
+                        rs.getInt("id"),
+                        rs.getString("nome"),
+                        rs.getDate("nascimento").toLocalDate(),
+                        rs.getString("email"),
+                        rs.getString("cpf"),
+                        rs.getString("tipo_exame"),
+                        rs.getTimestamp("hora_chegada").toLocalDateTime(),
+                        rs.getBoolean("atendido")
+                );
+                lista.add(p);
+            }
+        }
+        return lista;
+    }
+
+    // Método para listar TODOS os pacientes (histórico e fila) para o painel administrativo
+    public List<Pacientes> listarTodos() throws SQLException {
+        String sql = "SELECT * FROM pacientes ORDER BY hora_chegada DESC";
         List<Pacientes> lista = new ArrayList<>();
 
         try (Connection con = ConexaoBanco.getConexao();
@@ -113,7 +139,6 @@ public class PacienteDAO {
         return -1;
     }
 
-    // Método para buscar as especialidades diretamente da tabela 'especialidades' do banco
     public List<String> listarEspecialidades() throws SQLException {
         String sql = "SELECT nome_especialidade FROM especialidades ORDER BY nome_especialidade ASC";
         List<String> lista = new ArrayList<>();
