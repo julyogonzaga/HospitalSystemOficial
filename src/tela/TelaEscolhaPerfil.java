@@ -1,6 +1,7 @@
 package tela;
 import dao.MedicoDAO;
 import estrutura.Medico;
+import tela.PainelPaciente;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;

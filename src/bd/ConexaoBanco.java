@@ -1,4 +1,5 @@
 package bd;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -21,8 +22,16 @@ public class ConexaoBanco {
         return conexao;
     }
 
-    public static void main(String[] args) {
+    // Atalho para manter compatibilidade com códigos que chamam getConexao() (como o do seu colega)
+    public static Connection getConexao() throws SQLException {
+        Connection conn = conectar();
+        if (conn == null) {
+            throw new SQLException("Não foi possível estabelecer a conexão com o banco de dados.");
+        }
+        return conn;
+    }
 
+    public static void main(String[] args) {
         conectar();
     }
 }
