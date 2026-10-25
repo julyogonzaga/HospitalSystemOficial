@@ -5,7 +5,6 @@ import estrutura.Medico;
 import estrutura.Pacientes;
 import dao.PacienteDAO;
 
-
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
